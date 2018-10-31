@@ -11,6 +11,9 @@ from gomjabbar.ifs.build import (
     parse_file
 )
 
+BIN_DIR = op.join(op.abspath(sys.prefix), 'bin')
+INCLUDE_DIR = op.join(op.abspath(sys.prefix), 'include')
+
 DATA_DIR = op.join(op.dirname(__file__), 'data')
 TEMPLATE_LOADER = jinja2.FileSystemLoader(DATA_DIR)
 TEMPLATE_ENV = jinja2.Environment(loader=TEMPLATE_LOADER, trim_blocks=True,
@@ -50,24 +53,34 @@ def _compile_test(path):
 
     Returns the path of the resulting executable.
     """
+    def _compile_obj(p):
+        base_name = op.splitext(p)[0]
+        c_file = base_name + '.c'
+        obj_file = base_name + '.o'
+        cmd = ['cc', '-c', '-o', obj_file, c_file, '-I' + INCLUDE_DIR]
+        check_call(cmd)
+        return obj_file
+
+    def _preprocess_mod(p):
+        cmd = [op.join(BIN_DIR, 'cmpp'), '-mod', p]
+        check_call(cmd)
+
     code_dir, path = op.split(path)
-    root = op.abspath(sys.prefix)
+    module_path = op.splitext(path)[0]
     code_dir = op.abspath(code_dir)
     with _in_dir(code_dir):
         # Preprocess the .mod file with cmpp
-        cmd = [op.join(root, 'bin', 'cmpp'), '-mod', path]
-        check_call(cmd)
-
+        _preprocess_mod(path)
         # Compile the resulting .c file
-        module_path = op.splitext(path)[0]
-        c_file = module_path + '.c'
-        obj_file = module_path + '.o'
-        cmd = ['cc', '-c', '-o', obj_file, c_file,
-               '-I' + op.join(root, 'include')]
-        check_call(cmd)
+        obj_file = _compile_obj(path)
+
+        # Make sure cfunc.o exists
+        cfunc_obj_file = 'cfunc.o'
+        if not op.exists(cfunc_obj_file):
+            _preprocess_mod('cfunc.mod')
+            cfunc_obj_file = _compile_obj('cfunc.c')
 
         # Link the resulting .o file with cfunc.o into an executable
-        cfunc_obj_file = op.join(op.dirname(path), 'cfunc.o')
         cmd = ['cc', '-o', module_path, cfunc_obj_file, obj_file]
         check_call(cmd)
 
