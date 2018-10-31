@@ -1,0 +1,13 @@
+void
+init_params(Mif_Private_t* data)
+{
+{% for param in parameters %}
+{% set outer_loop = loop %}
+    data->param[{{ outer_loop.index0 }}]->size = {{ param['values']|length }};
+    data->param[{{ outer_loop.index0 }}]->element = (Mif_Value_t *)calloc({{ param['values']|array_size }}, sizeof(Mif_Value_t));
+{% for value in param['values'] %}
+    data->param[{{ outer_loop.index0 }}]->element[{{ loop.index0 }}].{{ param['unionmember'] }} = {{ value }};
+{% endfor %}
+{% endfor %}
+}
+

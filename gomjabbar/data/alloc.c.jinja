@@ -1,0 +1,81 @@
+#include <stdlib.h>
+
+Mif_Private_t*
+allocate_mif_private()
+{
+    Mif_Private_t* data = (Mif_Private_t*)calloc(1, sizeof(Mif_Private_t));
+    int i;
+
+    data->num_conn = {{ num_conns }};
+    data->num_param = {{ num_params }};
+    data->num_inst_var = {{ num_static_vars }};
+    data->conn = (Mif_Conn_Data_t **)calloc(data->num_conn, sizeof(Mif_Conn_Data_t *));
+    data->param = (Mif_Param_Data_t **)calloc(data->num_param, sizeof(Mif_Param_Data_t *));
+    data->inst_var = (Mif_Inst_Var_Data_t **)calloc(data->num_inst_var, sizeof(Mif_Inst_Var_Data_t *));
+
+    for (i = 0; i < data->num_conn; ++i) {
+        data->conn[i] = (Mif_Conn_Data_t *)calloc(1, sizeof(Mif_Conn_Data_t));
+    }
+    for (i = 0; i < data->num_param; ++i) {
+        data->param[i] = (Mif_Param_Data_t *)calloc(1, sizeof(Mif_Param_Data_t));
+    }
+    for (i = 0; i < data->num_inst_var; ++i) {
+        data->inst_var[i] = (Mif_Inst_Var_Data_t *)calloc(1, sizeof(Mif_Inst_Var_Data_t));
+        data->inst_var[i]->element = (Mif_Value_t *)calloc(1, sizeof(Mif_Value_t));
+    }
+
+    return data;
+}
+
+void
+free_mif_private(Mif_Private_t* data)
+{
+    int i, j, k, count;
+
+    for (i = 0; i < data->num_conn; ++i) {
+        if(data->conn[i]->is_null) {
+            free(data->conn[i]);
+            continue;
+        }
+
+        count = data->conn[i]->size;
+        if (data->conn[i]->is_output) {
+            for (j = 0; j < count; j++) {
+                for (k = 0; k < count; k++) {
+                    if ((data->conn[k]->is_null) || (!data->conn[k]->is_input))
+                        continue;
+                    if (data->conn[i]->port[j]->partial)
+                        free(data->conn[i]->port[j]->partial[k].port);
+                    if (data->conn[i]->port[j]->ac_gain)
+                        free(data->conn[i]->port[j]->ac_gain[k].port);
+                    if (data->conn[i]->port[j]->smp_data.input)
+                        free(data->conn[i]->port[j]->smp_data.input[k].port);
+                }
+                free(data->conn[i]->port[j]->partial);
+                free(data->conn[i]->port[j]->ac_gain);
+                free(data->conn[i]->port[j]->smp_data.input);
+            }
+        }
+
+        for (j = 0; j < count; j++)
+            free(data->conn[i]->port[j]);
+        free(data->conn[i]->port);
+        free(data->conn[i]);
+    }
+
+    for (i = 0; i < data->num_param; ++i) {
+        free(data->param[i]->element);
+        free(data->param[i]);
+    }
+
+    for (i = 0; i < data->num_inst_var; ++i) {
+        free(data->inst_var[i]->element);
+        free(data->inst_var[i]);
+    }
+
+    free(data->conn);
+    free(data->param);
+    free(data->inst_var);
+    free(data);
+}
+

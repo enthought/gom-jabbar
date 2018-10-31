@@ -1,0 +1,35 @@
+void
+init_connections(Mif_Private_t* data)
+{
+{% for cn_dict in connections %}
+{% set outer_loop = loop %}
+    data->conn[{{ outer_loop.index0 }}]->is_null = MIF_FALSE;
+{% if cn_dict['is_input'] %}
+    data->conn[{{ outer_loop.index0 }}]->is_input = MIF_TRUE;
+{% else %}
+    data->conn[{{ outer_loop.index0 }}]->is_input = MIF_FALSE;
+{% endif %}
+{% if cn_dict['is_output'] %}
+    data->conn[{{ outer_loop.index0 }}]->is_output = MIF_TRUE;
+{% else %}
+    data->conn[{{ outer_loop.index0 }}]->is_output = MIF_FALSE;
+{% endif %}
+    data->conn[{{ outer_loop.index0 }}]->size = {{ cn_dict['ports']|length }};
+    data->conn[{{ outer_loop.index0 }}]->port = (Mif_Port_Data_t **)calloc({{ cn_dict['ports']|array_size }}, sizeof(Mif_Port_Data_t *));
+{% for port in cn_dict['ports'] %}
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}] = (Mif_Port_Data_t *)calloc(1, sizeof(Mif_Port_Data_t));
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->partial = (Mif_Partial_t *)calloc(1, sizeof(Mif_Partial_t));
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->partial[0].port = (double *)calloc(1, sizeof(double));
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->ac_gain = (Mif_AC_Gain_t *)calloc(1, sizeof(Mif_AC_Gain_t));
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->ac_gain[0].port = (Mif_Complex_t *)calloc(1, sizeof(Mif_Complex_t));
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->smp_data.input = (Mif_Conn_Ptr_t *)calloc(1, sizeof(Mif_Conn_Ptr_t));
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->smp_data.input[0].port = (Mif_Port_Ptr_t *)calloc(1, sizeof(Mif_Port_Ptr_t));
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->type = {{ port['type'] }};
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->invert = MIF_FALSE;
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->changed = MIF_FALSE;
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->input.rvalue = 0.0;
+    data->conn[{{ outer_loop.index0 }}]->port[{{ loop.index0 }}]->output.rvalue = 0.0;
+{% endfor %}
+{% endfor %}
+}
+
