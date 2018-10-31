@@ -18,16 +18,31 @@ TEMPLATE_ENV = jinja2.Environment(loader=TEMPLATE_LOADER, trim_blocks=True,
 TEMPLATE_ENV.filters['array_size'] = lambda v: max(1, len(v))
 
 
+@contextlib.contextmanager
 def build_test(dir_path, name, code, parameters_dict):
     """ Build a C source file which can be used to test part of a code model.
     """
     conns, params, num_vars = _get_template_context(dir_path, parameters_dict)
     output = op.join(dir_path, name + '.mod')
-    with open(output, 'w') as fp:
-        _render_templates(fp, conns, params, num_vars)
-        fp.write(code)
 
-    return _compile_test(output)
+    try:
+        with open(output, 'w') as fp:
+            _render_templates(fp, conns, params, num_vars)
+            fp.write(code)
+
+        yield _compile_test(output)
+    finally:
+        _clean_test(op.join(dir_path, name))
+
+
+def _clean_test(path):
+    """ Clean up after a call to _compile_test
+    """
+    path = op.abspath(path)
+    remove_paths = [path + ext for ext in ('', '.c', '.o', '.mod')]
+    for path in remove_paths:
+        if op.exists(path):
+            os.remove(path)
 
 
 def _compile_test(path):
@@ -75,7 +90,7 @@ def _get_template_context(dir_path, parameters_dict):
 
 @contextlib.contextmanager
 def _in_dir(path):
-    restore = op.curdir
+    restore = op.abspath(op.curdir)
     try:
         os.chdir(path)
         yield
