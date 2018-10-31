@@ -6,7 +6,7 @@ import sys
 
 import jinja2
 
-from .ifs_build import (
+from gomjabbar.ifs.build import (
     build_connections_list, build_parameters_list, count_static_vars,
     parse_file
 )

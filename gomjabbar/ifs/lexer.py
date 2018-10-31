@@ -5,7 +5,7 @@ import re
 
 import ply.lex as lex
 
-from .ifs_types import CType, Direction, DType, Identifier
+from .ast import CType, Direction, DType, Identifier
 
 
 class IfsLexer(object):
@@ -95,7 +95,7 @@ class IfsLexer(object):
     def t_comment_nl(self, t):
         r'\n'
         # new line
-        pass
+        t.lexer.lineno += 1
 
     def t_comment_end(self, t):
         r'\*+/'
@@ -249,60 +249,62 @@ class IfsLexer(object):
 
     def t_bool_end(self, t):
         r'\n'
+        t.lexer.lineno += 1
         t.lexer.pop_state()
 
     def t_ctype_CTYPE_V(self, t):
         r'v(?!d|nam)'
-        t.value = CType(t.value)
+        t.value = CType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_ctype_CTYPE_VD(self, t):
         r'vd'
-        t.value = CType(t.value)
+        t.value = CType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_ctype_CTYPE_VNAM(self, t):
         r'vnam'
-        t.value = CType(t.value)
+        t.value = CType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_ctype_CTYPE_I(self, t):
         r'i(?!d)'
-        t.value = CType(t.value)
+        t.value = CType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_ctype_CTYPE_ID(self, t):
         r'id'
-        t.value = CType(t.value)
+        t.value = CType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_ctype_CTYPE_G(self, t):
         r'g(?!d)'
-        t.value = CType(t.value)
+        t.value = CType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_ctype_CTYPE_GD(self, t):
         r'gd'
-        t.value = CType(t.value)
+        t.value = CType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_ctype_CTYPE_H(self, t):
         r'h(?!d)'
-        t.value = CType(t.value)
+        t.value = CType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_ctype_CTYPE_HD(self, t):
         r'hd'
-        t.value = CType(t.value)
+        t.value = CType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_ctype_CTYPE_D(self, t):
         r'd'
-        t.value = CType(t.value)
+        t.value = CType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_ctype_end(self, t):
         r'\n'
+        t.lexer.lineno += 1
         t.lexer.pop_state()
 
     def t_dir_DIR_IN(self, t):
@@ -322,40 +324,42 @@ class IfsLexer(object):
 
     def t_dir_end(self, t):
         r'\n'
+        t.lexer.lineno += 1
         t.lexer.pop_state()
 
     def t_dtype_DTYPE_REAL(self, t):
         r'real'
-        t.value = DType(t.value)
+        t.value = DType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_dtype_DTYPE_INT(self, t):
         r'int'
-        t.value = DType(t.value)
+        t.value = DType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_dtype_DTYPE_BOOLEAN(self, t):
         r'boolean'
-        t.value = DType(t.value)
+        t.value = DType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_dtype_DTYPE_COMPLEX(self, t):
         r'complex'
-        t.value = DType(t.value)
+        t.value = DType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_dtype_DTYPE_STRING(self, t):
         r'string'
-        t.value = DType(t.value)
+        t.value = DType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_dtype_DTYPE_POINTER(self, t):
         r'pointer'
-        t.value = DType(t.value)
+        t.value = DType(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_dtype_end(self, t):
         r'\n'
+        t.lexer.lineno += 1
         t.lexer.pop_state()
 
     t_LANGLE = r'<'
@@ -367,7 +371,7 @@ class IfsLexer(object):
 
     def t_IDENTIFIER(self, t):
         r'[a-z_]+\w*'
-        t.value = Identifier(t.value)
+        t.value = Identifier(t.value, lineno=t.lexer.lineno)
         return t
 
     def t_REAL_LITERAL(self, t):
@@ -392,8 +396,8 @@ class IfsLexer(object):
         raise RuntimeError('invalid syntax: {}'.format(t))
 
     def __init__(self, filename='ifspec.ifs'):
-        lex_dir = op.join(op.dirname(__file__), 'parser_tables')
-        lex_module = 'gomjabbar.parser_tables.ifs_lextab'
+        lex_dir = op.join(op.dirname(__file__), 'tables')
+        lex_module = 'gomjabbar.ifs.tables.lextab'
 
         self.lexer = lex.lex(
             module=self, reflags=re.VERBOSE | re.IGNORECASE,

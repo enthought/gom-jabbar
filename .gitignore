@@ -4,8 +4,8 @@ __pycache__/
 
 # generated files
 gomjabbar/_version.py
-gomjabbar/parser_tables/ifs_lextab.py
-gomjabbar/parser_tables/ifs_parsetab.py
+gomjabbar/ifs/tables/lextab.py
+gomjabbar/ifs/tables/parsetab.py
 
 # Distribution / packaging
 .Python

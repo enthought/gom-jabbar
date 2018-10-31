@@ -1,16 +1,14 @@
 from __future__ import print_function
 
-import argparse
-
-from .ifs_lex import IfsLexer
-from .ifs_parse import IfsParser
-from .ifs_types import (
-    Dash, Ifs, Table, TableRow,
+from gomjabbar.const import (
     NAME_TABLE, PARAMETER_TABLE, PORT_TABLE, STATIC_VAR_TABLE,
     ALLOWED_TYPES, ARRAY, ARRAY_BOUNDS, DATA_TYPE, DEFAULT_TYPE, DEFAULT_VALUE,
     DESCRIPTION, DIRECTION, LIMITS, NULL_ALLOWED, PARAMETER_NAME, PORT_NAME,
-    STATIC_VAR_NAME,
+    STATIC_VAR_NAME
 )
+from .ast import Dash, Ifs, Table, TableRow
+from .lexer import IfsLexer
+from .parser import IfsParser
 
 PORT_TYPES = {
     'v': 'MIF_VOLTAGE',
@@ -92,7 +90,7 @@ def compact_ast(ifs_ast):
     compacted = []
     ifs_kwargs = {}
 
-    for tab in ifs_ast.tables:
+    for tab in ifs_ast:
         tables.setdefault(tab.type, []).append(tab)
 
     # The last NAME_TABLE is the one which is used
@@ -123,8 +121,8 @@ def compact_tables(table_type, tables, expected_row_names):
     rows = {}
     for tab in tables:
         expected_rows = expected_row_names.copy()
-        col_count = len(tab.rows[0].value)
-        for row in tab.rows:
+        col_count = len(tab.nodes[0].value)
+        for row in tab:
             rows.setdefault(row.type, []).extend(row.value)
             expected_rows.remove(row.type)
 
@@ -138,7 +136,7 @@ def compact_tables(table_type, tables, expected_row_names):
 def count_static_vars(static_vars_table):
     """ Count the number of variables defined in the STATIC_VARS_TABLE
     """
-    return len(static_vars_table.rows[0].value)
+    return len(static_vars_table.nodes[0].value)
 
 
 def parse_file(path):
@@ -167,14 +165,16 @@ def tokenize_file(path):
 def transpose_table(table):
     """ Convert a `Table` to a list of objects which represent the "columns".
     """
-    items = [{} for _ in range(len(table.rows[0].value))]
-    for row in table.rows:
+    items = [{} for _ in range(len(table.nodes[0].value))]
+    for row in table:
         for i, value in enumerate(row.value):
             items[i][row.type] = value
     return [_Namespace(**d) for d in items]
 
 
 if __name__ == '__main__':
+    import argparse
+
     argparser = argparse.ArgumentParser()
     argparser.add_argument('-l', '--lex', type=str, default='')
     argparser.add_argument('-p', '--parse', type=str, default='')

@@ -4,8 +4,8 @@ import os.path as op
 
 import ply.yacc as yacc
 
-from .ifs_lex import IfsLexer
-from .ifs_types import Dash, Ifs, Range, Table, TableRow
+from .ast import Dash, Ifs, Range, Table, TableRow
+from .lexer import IfsLexer
 
 
 def _handle_list_reduction(p):
@@ -53,7 +53,7 @@ class IfsParser(object):
                   | PORT_TABLE port_table
                   | PARAMETER_TABLE parameter_table
                   | STATIC_VAR_TABLE static_var_table """
-        p[0] = Table(p[1], p[2])
+        p[0] = Table(p[1], p[2], lineno=p.lineno(1))
 
     def p_name_table(self, p):
         """ name_table : name_table name_table_item
@@ -64,7 +64,7 @@ class IfsParser(object):
         """ name_table_item : C_FUNCTION_NAME identifier
                             | SPICE_MODEL_NAME identifier
                             | DESCRIPTION string """
-        p[0] = TableRow(p[1], p[2])
+        p[0] = TableRow(p[1], p[2], lineno=p.lineno(1))
 
     def p_port_table(self, p):
         """ port_table : port_table port_table_item
@@ -80,7 +80,7 @@ class IfsParser(object):
                             | ARRAY list_of_bool
                             | ARRAY_BOUNDS list_of_array_bounds
                             | NULL_ALLOWED list_of_bool """
-        p[0] = TableRow(p[1], p[2])
+        p[0] = TableRow(p[1], p[2], lineno=p.lineno(1))
 
     def p_parameter_table(self, p):
         """ parameter_table : parameter_table parameter_table_item
@@ -96,7 +96,7 @@ class IfsParser(object):
                                  | ARRAY list_of_bool
                                  | ARRAY_BOUNDS list_of_array_bounds
                                  | NULL_ALLOWED list_of_bool """
-        p[0] = TableRow(p[1], p[2])
+        p[0] = TableRow(p[1], p[2], lineno=p.lineno(1))
 
     def p_static_var_table(self, p):
         """ static_var_table : static_var_table static_var_table_item
@@ -108,7 +108,7 @@ class IfsParser(object):
                                   | DESCRIPTION list_of_strings
                                   | DATA_TYPE list_of_dtypes
                                   | ARRAY list_of_bool """
-        p[0] = TableRow(p[1], p[2])
+        p[0] = TableRow(p[1], p[2], lineno=p.lineno(1))
 
     def p_list_of_ids(self, p):
         """ list_of_ids : list_of_ids identifier
@@ -182,12 +182,12 @@ class IfsParser(object):
 
     def p_int_range1(self, p):
         """ int_range : DASH """
-        p[0] = Range()
+        p[0] = Range(lineno=p.lineno(1))
 
     def p_int_range2(self, p):
         """ int_range : LBRACKET int_or_dash maybe_comma int_or_dash RBRACKET
         """
-        p[0] = Range(p[2], p[4])
+        p[0] = Range(p[2], p[4], lineno=p.lineno(1))
 
     def p_maybe_comma(self, p):
         """ maybe_comma : COMMA
@@ -196,7 +196,7 @@ class IfsParser(object):
 
     def p_int_or_dash1(self, p):
         """ int_or_dash : DASH """
-        p[0] = Dash()
+        p[0] = Dash(lineno=p.lineno(1))
 
     def p_int_or_dash2(self, p):
         """ int_or_dash : integer_value """
@@ -204,16 +204,16 @@ class IfsParser(object):
 
     def p_range1(self, p):
         """ range : DASH """
-        p[0] = Range()
+        p[0] = Range(lineno=p.lineno(1))
 
     def p_range2(self, p):
         """ range : LBRACKET number_or_dash maybe_comma number_or_dash RBRACKET
         """
-        p[0] = Range(p[2], p[4])
+        p[0] = Range(p[2], p[4], lineno=p.lineno(1))
 
     def p_number_or_dash1(self, p):
         """ number_or_dash : DASH """
-        p[0] = Dash()
+        p[0] = Dash(lineno=p.lineno(1))
 
     def p_number_or_dash2(self, p):
         """ number_or_dash : number """
@@ -226,7 +226,7 @@ class IfsParser(object):
 
     def p_value_or_dash1(self, p):
         """ value_or_dash : DASH """
-        p[0] = Dash()
+        p[0] = Dash(lineno=p.lineno(1))
 
     def p_value_or_dash2(self, p):
         """ value_or_dash : value """
@@ -302,8 +302,8 @@ class IfsParser(object):
         raise RuntimeError(msg.format(t, t.lineno))
 
     def __init__(self):
-        parse_dir = op.join(op.dirname(__file__), 'parser_tables')
-        parse_mod = 'gomjabbar.parser_tables.ifs_parsetab'
+        parse_dir = op.join(op.dirname(__file__), 'tables')
+        parse_mod = 'gomjabbar.ifs.tables.parsetab'
 
         self.parser = yacc.yacc(
             module=self,
@@ -316,6 +316,7 @@ class IfsParser(object):
         )
 
     def parse(self, source, filename='ifspec.ifs'):
-        """Parse source string and create abstract syntax tree (AST)."""
+        """ Parse source string and create abstract syntax tree (AST).
+        """
         self.lexer = IfsLexer(filename)
         return self.parser.parse(source, debug=0, lexer=self.lexer.lexer)
