@@ -1,0 +1,30 @@
+NAME_TABLE:
+Spice_Model_Name:      dummy
+C_Function_Name:       cm_dummy
+Description:           "A device which does nothing"
+
+PORT_TABLE:
+Port_Name:             port
+Description:           "The only port here"
+Direction:             inout
+Default_Type:          gd
+Allowed_Types:         [gd]
+Vector:                 no
+Vector_Bounds:          -
+Null_Allowed:          no
+
+PARAMETER_TABLE:
+Parameter_Name:        d
+Description:           "parameter"
+Data_Type:             real
+Default_Value:         -
+Limits:                -
+Vector:                no
+Vector_Bounds:         -
+Null_Allowed:          no
+
+
+STATIC_VAR_TABLE:
+Static_Var_Name:   multiplier
+Data_Type:         real
+Description:       "Some scaling factor"

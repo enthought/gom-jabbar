@@ -3,6 +3,7 @@ __pycache__/
 *.py[cod]
 
 # generated files
+examples/*/*.[co]
 gomjabbar/_version.py
 gomjabbar/ifs/tables/lextab.py
 gomjabbar/ifs/tables/parsetab.py
