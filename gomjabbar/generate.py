@@ -127,3 +127,6 @@ def _render_templates(fp, connections, parameters, num_static_vars):
     template = TEMPLATE_ENV.get_template('params.c.jinja')
     context = {'parameters': parameters}
     fp.write(template.render(context))
+
+    macros_source = TEMPLATE_LOADER.get_source(TEMPLATE_ENV, 'macros.c')[0]
+    fp.write(macros_source)

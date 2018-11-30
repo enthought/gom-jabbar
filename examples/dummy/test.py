@@ -9,9 +9,7 @@ mod_code = """
 extern void cm_dummy(ARGS);
 
 int main(int argc, char **argv) {
-    Mif_Private_t* mif_private = allocate_mif_private();
-    init_connections(mif_private);
-    init_params(mif_private);
+    GJ_SETUP(mif_private);
 
     INIT = MIF_TRUE;
     cm_dummy(mif_private);
@@ -19,7 +17,7 @@ int main(int argc, char **argv) {
     INIT = MIF_FALSE;
     cm_dummy(mif_private);
 
-    free_mif_private(mif_private);
+    GJ_TEARDOWN(mif_private);
     return 0;
 }
 """
