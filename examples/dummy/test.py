@@ -6,8 +6,6 @@ from subprocess import check_output
 from gomjabbar.generate import build_test
 
 mod_code = """
-extern void cm_dummy(ARGS);
-
 int main(int argc, char **argv) {
     GJ_SETUP(mif_private);
 
