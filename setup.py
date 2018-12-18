@@ -7,8 +7,8 @@ import subprocess
 from setuptools import setup
 
 MAJOR = 0
-MINOR = 1
-MICRO = 2
+MINOR = 2
+MICRO = 1
 
 IS_RELEASED = False
 VERSION = '%d.%d.%d' % (MAJOR, MINOR, MICRO)
