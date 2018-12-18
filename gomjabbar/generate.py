@@ -3,6 +3,7 @@ import os
 import os.path as op
 from subprocess import check_call
 import sys
+import uuid
 
 import jinja2
 
@@ -22,11 +23,23 @@ TEMPLATE_ENV.filters['array_size'] = lambda v: max(1, len(v))
 
 
 @contextlib.contextmanager
-def build_test(dir_path, name, code, parameters_dict):
-    """ Build a C source file which can be used to test part of a code model.
+def build_test(code_model_dir, code, parameters):
+    """ Build some code model source into a program which can be used to test
+    part of a code model.
+
+    Parameters
+    ----------
+    code_model_dir : str
+        The path of the directory of the code model being tested.
+    code : str
+        Source code which will be linked with the code model into a program.
+    parameters : dict
+        A dictionary of values which will be assigned to the PARAMETER_TABLE
+        variables defined by the code model.
     """
-    conns, params, num_vars = _get_template_context(dir_path, parameters_dict)
-    output = op.join(dir_path, name + '.mod')
+    conns, params, num_vars = _get_template_context(code_model_dir, parameters)
+    test_name = _generate_test_name()
+    output = op.join(code_model_dir, test_name + '.mod')
 
     try:
         with open(output, 'w') as fp:
@@ -35,7 +48,7 @@ def build_test(dir_path, name, code, parameters_dict):
 
         yield _compile_test(output)
     finally:
-        _clean_test(op.join(dir_path, name))
+        _clean_test(op.join(code_model_dir, test_name))
 
 
 def _clean_test(path):
@@ -85,6 +98,10 @@ def _compile_test(path):
         check_call(cmd)
 
     return op.join(code_dir, module_path)
+
+
+def _generate_test_name():
+    return '_' + uuid.uuid4().hex[:8]
 
 
 def _get_template_context(dir_path, parameters_dict):
